@@ -21,8 +21,6 @@
   _R_ !!
 */
 
-#include "S.h"
-
 #if defined(USING_R) /*( R-specific stuff */
 
 #define  S_CDECL
