@@ -8,65 +8,65 @@
 #' @rdname filter_sigs
 #' @export 
 filter_sigs = function(sigs, ref, conserved = 0.7) {
-    # no need for filtering
-    if (all(unlist(sigs) %in% ref)) {
-        return(sigs)
-    }
-
-    # original n of sigs
-    ngr0 = length(sigs)
-    # original n of genes in sigs
-    nge0 = lengths(sigs)
-    
-    # filter sigs according to ref
-    sigs = sapply(sigs, function(group) group[group %in% ref], simplify = F)
-    # new n of genes in sigs
-    nge1 = lengths(sigs)
-
-    # return NULL if NO genes left
-    if (all(nge1 == 0)) {
-        return(NULL)
-    }
-    
-    # fractions of genes retained after filtering
-    frac.conserved = nge1/nge0
-
-    # filter sigs based on fractions
-    sigs = sigs[frac.conserved >= conserved]
-
-    # pretty fractions for printing
-    frac.conserved = round(frac.conserved, 2)
-    frac.conserved = paste(names(frac.conserved), frac.conserved, sep = ": ")
-
-    # new n of sigs
-    # after fraction filtering
-    ngr1 = length(sigs)
-    
-    # stop if no sigs left
-    if (ngr1 == 0) {
-        stop('No sigs left to score with.')
-    }
-
-    # remove filtered-out sigs from n gene counts
-    # so that nge0 and nge1 have same (relevant) sigs
-    nge1 = nge1[names(ngr1)]
-    nge0 = nge0[names(ngr1)]
-
-    # warning if entire sigs were filtered out
-    if (ngr1 < ngr0) {
-        warning('Removed ', ngr0 - ngr1, ' out of ', ngr0,
-                ' sigs with < ', conserved * 100,
-                '% genes retained after filtering...')
-    }
-
-    # warning if some genes were filtered out from one or more sigs
-    if (any(nge1 != nge0)) {
-        warning('Some genes were filtered out. Fractions retained:','\n',
-                paste0(frac.conserved, collapse = "\n"))
-    }
-
-    # return filtered sigs
-    sigs
+  # no need for filtering
+  if (all(unlist(sigs) %in% ref)) {
+    return(sigs)
+  }
+  
+  # original n of sigs
+  ngr0 = length(sigs)
+  # original n of genes in sigs
+  nge0 = lengths(sigs)
+  
+  # filter sigs according to ref
+  sigs = sapply(sigs, function(group) group[group %in% ref], simplify = F)
+  # new n of genes in sigs
+  nge1 = lengths(sigs)
+  
+  # return NULL if NO genes left
+  if (all(nge1 == 0)) {
+    return(NULL)
+  }
+  
+  # fractions of genes retained after filtering
+  frac.conserved = nge1/nge0
+  
+  # filter sigs based on fractions
+  sigs = sigs[frac.conserved >= conserved]
+  
+  # pretty fractions for printing
+  frac.conserved = round(frac.conserved, 2)
+  frac.conserved = paste(names(frac.conserved), frac.conserved, sep = ": ")
+  
+  # new n of sigs
+  # after fraction filtering
+  ngr1 = length(sigs)
+  
+  # stop if no sigs left
+  if (ngr1 == 0) {
+    stop('No sigs left to score with.')
+  }
+  
+  # remove filtered-out sigs from n gene counts
+  # so that nge0 and nge1 have same (relevant) sigs
+  nge1 = nge1[names(ngr1)]
+  nge0 = nge0[names(ngr1)]
+  
+  # warning if entire sigs were filtered out
+  if (ngr1 < ngr0) {
+    warning('Removed ', ngr0 - ngr1, ' out of ', ngr0,
+            ' sigs with < ', conserved * 100,
+            '% genes retained after filtering...')
+  }
+  
+  # warning if some genes were filtered out from one or more sigs
+  if (any(nge1 != nge0)) {
+    warning('Some genes were filtered out. Fractions retained:','\n',
+            paste0(frac.conserved, collapse = "\n"))
+  }
+  
+  # return filtered sigs
+  sigs
 }
 
 #' @title Basic Scoring of Matrix by Gene sigs 
@@ -78,10 +78,11 @@ filter_sigs = function(sigs, ref, conserved = 0.7) {
 #' @rdname baseScores
 #' @export 
 baseScores = function(m, sigs, conserved.genes = 0.7) {
-    if (is.character(sigs)) sigs = list(sigs)
-    sigs = filter_sigs(sigs, ref = rownames(m), conserved = conserved.genes)
-    sapply(sigs, function(sig) colMeans(m[sig, , drop = F]))
+  if (is.character(sigs)) sigs = list(sigs)
+  sigs = filter_sigs(sigs, ref = rownames(m), conserved = conserved.genes)
+  sapply(sigs, function(sig) colMeans(m[match(sig, rownames(m)), ]))
 }
+
 
 
 #' @title Score a Matrix by Gene sigs (Signatures) 
@@ -114,31 +115,31 @@ sigScores = function(m,
                      expr.binsize = 100,
                      conserved.genes = 0.7,
                      replace = F) {
-
-    # if only one group, convert to list
-    if (is.character(sigs)) sigs = list(sigs)
-
-    # filter sigs
-    sigs = filter_sigs(sigs, ref = rownames(m), conserved = conserved.genes)
-
-    Args = mget(ls())
-
-    if (!is.null(groups)) {
-        Args$expr.bin.m <- m
-        Args = Args[names(Args) != 'm']
-        mlist = sapply(groups, function(sample) m[, sample], simplify = F)
-        res = sapply(mlist, function(m) {
-                         do.call(.sigScores, c(list(m = m), Args))},
-                         simplify = F)
-
-        cells = unlist(sapply(res, rownames, simplify = F))
-        res = do.call(rbind.data.frame, res)
-        rownames(res) = cells
-    }
-
-    else res = do.call(.sigScores, Args)
-
-    res
+  
+  # if only one group, convert to list
+  if (is.character(sigs)) sigs = list(sigs)
+  
+  # filter sigs
+  sigs = filter_sigs(sigs, ref = rownames(m), conserved = conserved.genes)
+  
+  Args = mget(ls())
+  
+  if (!is.null(groups)) {
+    Args$expr.bin.m <- m
+    Args = Args[names(Args) != 'm']
+    mlist = sapply(groups, function(sample) m[, sample], simplify = F)
+    res = sapply(mlist, function(m) {
+      do.call(.sigScores, c(list(m = m), Args))},
+      simplify = F)
+    
+    cells = unlist(sapply(res, rownames, simplify = F))
+    res = do.call(rbind.data.frame, res)
+    rownames(res) = cells
+  }
+  
+  else res = do.call(.sigScores, Args)
+  
+  res
 }
 
 
@@ -155,53 +156,53 @@ sigScores = function(m,
                       expr.binsize = 100,
                       conserved.genes = 0.7,
                       replace = F) {
-
-    # base scores (no centering / expression normalisation of scores (yet))
+  
+  # base scores (no centering / expression normalisation of scores (yet))
+  if (center.rows) {
+    scores = baseScores(m = rowcenter(m), sigs = sigs, conserved.genes = conserved.genes)
+  } else {
+    scores = baseScores(m = m, sigs = sigs, conserved.genes = conserved.genes)
+  }
+  # no mean centering OR expr/complexity centering
+  if (!center) expr.center = F
+  
+  if (expr.center) {
+    if (is.null(expr.sigs)) {
+      
+      if (is.null(expr.bins)) {
+        if (is.null(expr.bin.m)) expr.bin.m = m
+        expr.bins = bin(expr.bin.m, breaks = expr.nbin)
+        stopifnot(all(unlist(sigs) %in% names(expr.bins)))
+      }
+      
+      expr.sigs = sapply(sigs,
+                         binmatch,
+                         bins = expr.bins,
+                         n = expr.binsize,
+                         replace = replace,
+                         simplify = F)
+      
+      names(expr.sigs) = names(sigs)
+    }
+    
     if (center.rows) {
-        scores = baseScores(m = rowcenter(m), sigs = sigs, conserved.genes = conserved.genes)
+      expr.scores = baseScores(m = rowcenter(m), sigs = expr.sigs)
     } else {
-        scores = baseScores(m = m, sigs = sigs, conserved.genes = conserved.genes)
+      expr.scores = baseScores(m = m, sigs = expr.sigs)
     }
-    # no mean centering OR expr/complexity centering
-    if (!center) expr.center = F
-
-    if (expr.center) {
-        if (is.null(expr.sigs)) {
-
-            if (is.null(expr.bins)) {
-                if (is.null(expr.bin.m)) expr.bin.m = m
-                expr.bins = bin(expr.bin.m, breaks = expr.nbin)
-                stopifnot(all(unlist(sigs) %in% names(expr.bins)))
-            }
-
-            expr.sigs = sapply(sigs,
-                               binmatch,
-                               bins = expr.bins,
-                               n = expr.binsize,
-                               replace = replace,
-                               simplify = F)
-
-            names(expr.sigs) = names(sigs)
-        }
-
-        if (center.rows) {
-            expr.scores = baseScores(m = rowcenter(m), sigs = expr.sigs)
-        } else {
-            expr.scores = baseScores(m = m, sigs = expr.sigs)
-        }
-        scores = scores - expr.scores
-    }
-
-    else if (center) {
-        if (!is.null(expr.bin.m)) center.scores = colMeans(expr.bin.m)
-        else center.scores = colMeans(m)
-        scores2 = sweep(scores, MARGIN = 1, STATS = center.scores, FUN = "-")
-    }
-
-    rows = rownames(scores)
-    scores = as.data.frame(scores)
-    rownames(scores) = rows
-    scores
+    scores = scores - expr.scores
+  }
+  
+  else if (center) {
+    if (!is.null(expr.bin.m)) center.scores = colMeans(expr.bin.m)
+    else center.scores = colMeans(m)
+    scores2 = sweep(scores, MARGIN = 1, STATS = center.scores, FUN = "-")
+  }
+  
+  rows = rownames(scores)
+  scores = as.data.frame(scores)
+  rownames(scores) = rows
+  scores
 }
 
 #' @title Score a Matrix with Marker Gene Sets Of Normal Cell Types 
@@ -213,7 +214,7 @@ sigScores = function(m,
 #' @rdname markerScores
 #' @export 
 markerScores = function(m, ...) {
-    sigs = suppressWarnings(filter_sigs(Markers_Normal, ref = rownames(m), conserved = 0.4))
-    sigs = sigs[lengths(sigs) >= 2]
-    sigScores(m = m, sigs = sigs, conserved.genes = conserved, ...)
+  sigs = suppressWarnings(filter_sigs(Markers_Normal, ref = rownames(m), conserved = 0.4))
+  sigs = sigs[lengths(sigs) >= 2]
+  sigScores(m = m, sigs = sigs, conserved.genes = conserved, ...)
 } 
